@@ -19,8 +19,8 @@ public class RockPaperScissors implements ActionListener {
 
     private int step;
     
-    JLabel score;
-    JLabel status;
+    private JLabel score;
+    private JLabel status;
 
     ArrayList<JButton> buttons = new ArrayList<JButton>();
 
@@ -31,12 +31,13 @@ public class RockPaperScissors implements ActionListener {
 
         JPanel header = new JPanel(new GridLayout(1, 1));
         score = new JLabel("User: " + userWins + " Computer: " + compWins);
-        score.setFont(new Font("Dialog", Font.PLAIN, 12));
+        score.setFont(new Font("Dialog", Font.BOLD, 12));
         header.add(score);
         frame.add(header, BorderLayout.NORTH);
 
         JPanel center = new JPanel(new GridLayout(1, 1));
         status = new JLabel("Select a move to play!", JLabel.CENTER);
+        score.setFont(new Font("Dialog", Font.BOLD, 12));
         center.add(status);
         frame.add(center, BorderLayout.CENTER);
 
@@ -83,7 +84,7 @@ public class RockPaperScissors implements ActionListener {
     private void determineWinner(String user, String comp) {
         if (user.equals(comp)) {
             System.out.println(comp);
-            status.setText("Tie");
+            status.setText("TIE");
         }
         else if(user.equals(ROCK) && comp.equals(SCISSORS) ||
             user.equals(SCISSORS) && comp.equals(PAPER) ||
@@ -91,13 +92,13 @@ public class RockPaperScissors implements ActionListener {
             System.out.println(comp);
             userWins++;
             updateUI();
-            status.setText("User wins");
+            status.setText("USER WINS!");
         }
         else {
             System.out.println(comp);
             compWins++;
             updateUI();
-            status.setText("Comp wins");
+            status.setText("COMPUTER WINS!");
         }
     }
 
