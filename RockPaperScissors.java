@@ -3,8 +3,13 @@ import java.awt.*;
 import java.awt.event.*;
 import java.util.Random;
 import java.util.ArrayList;
+import java.awt.image.BufferedImage;
+import javax.imageio.ImageIO;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.*;
 
-public class RockPaperScissors implements ActionListener {
+public class RockPaperScissors extends JPanel implements ActionListener {
 
     JFrame frame = new JFrame("Rock Paper Scissors");
     private final String ROCK = "🪨";
@@ -15,14 +20,20 @@ public class RockPaperScissors implements ActionListener {
     private String[] countdown = {"Rock...", "Paper...", "Scissors...", "Shoot!"};
 
     private int userWins  = 0;
+    private String userChoice = "";
     private int compWins = 0;
+    private String compChoice = "";
 
     private int step;
     
     private JLabel score;
     private JLabel status;
 
-    ArrayList<JButton> buttons = new ArrayList<JButton>();
+    private ArrayList<BufferedImage> hands = new ArrayList<BufferedImage>();
+
+    private ArrayList<JButton> buttons = new ArrayList<JButton>();
+
+    private boolean showImages = false;
 
     public RockPaperScissors() {
         frame.setSize(500, 500);
@@ -30,27 +41,54 @@ public class RockPaperScissors implements ActionListener {
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         JPanel header = new JPanel(new GridLayout(1, 1));
+        header.setOpaque(false);
         score = new JLabel("User: " + userWins + " Computer: " + compWins);
         score.setFont(new Font("Dialog", Font.BOLD, 12));
         header.add(score);
         frame.add(header, BorderLayout.NORTH);
 
-        JPanel center = new JPanel(new GridLayout(1, 1));
+        this.setLayout(new BorderLayout());
+
         status = new JLabel("Select a move to play!", JLabel.CENTER);
         score.setFont(new Font("Dialog", Font.BOLD, 12));
-        center.add(status);
-        frame.add(center, BorderLayout.CENTER);
+
+        this.add(status, BorderLayout.CENTER);
 
         JPanel buttonsPanel = new JPanel();
+        buttonsPanel.setOpaque(false);
         for (String option : OPTIONS) {
             JButton button = new JButton(option);
             button.addActionListener(this);
             button.setActionCommand(option);
-            button.addActionListener(e -> startCountdown(option));
+            button.addActionListener(e -> {userChoice = option;
+                startCountdown(option);});
             buttonsPanel.add(button);
             buttons.add(button);
         }
         frame.add(buttonsPanel, BorderLayout.SOUTH);
+
+        Path dir = Paths.get("images");
+
+        try (DirectoryStream<Path> stream = Files.newDirectoryStream(dir, "*.{jpg,jpeg,png,bmp}")) {
+            for (Path entry : stream) {
+                try {
+                    BufferedImage img = ImageIO.read(entry.toFile());
+                    if (img != null) {
+                        hands.add(img);
+                    }
+                } catch (IOException e) {
+                    System.out.println("Could not read file");
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        frame.add(this, BorderLayout.CENTER);
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
     }
 
     private void setButtonsEnabled(boolean enabled) {
@@ -61,6 +99,8 @@ public class RockPaperScissors implements ActionListener {
     private void startCountdown(String move) {
         setButtonsEnabled(false);
         step = 0;
+        showImages = false; 
+        repaint();
 
         Timer timer = new Timer(600, null); 
         timer.addActionListener(e -> {
@@ -69,11 +109,43 @@ public class RockPaperScissors implements ActionListener {
                 step++;
             } else {
                 timer.stop();
-                determineWinner(move, getCompChoice());
+                compChoice = getCompChoice();
+                showImages = true;
+                repaint();
+                determineWinner(move, compChoice);
                 setButtonsEnabled(true);
             }
         });
         timer.start();
+    }
+
+    public void paintComponent(Graphics g) {
+        super.paintComponent(g);
+        draw(g);
+    }
+
+    public void draw(Graphics g) {
+        if(!showImages) return;
+
+        if(userChoice.equals(ROCK)) {
+            g.drawImage(hands.get(1), 0, 200, 200, 200, this);
+        }
+        else if(userChoice.equals(PAPER)) {
+            g.drawImage(hands.get(0), 0, 200, 200, 200, this);
+        }
+        else {
+            g.drawImage(hands.get(2), 0, 200, 200, 200, this);
+        }
+
+        if(compChoice.equals(ROCK)) {
+            g.drawImage(hands.get(1), 300, 200, 200, 200, this);
+        }
+        else if(compChoice.equals(PAPER)) {
+            g.drawImage(hands.get(0), 300, 200, 200, 200, this);
+        }
+        else {
+            g.drawImage(hands.get(2), 300, 200, 200, 200, this);
+        }
     }
 
     private String getCompChoice() {
@@ -91,28 +163,17 @@ public class RockPaperScissors implements ActionListener {
             user.equals(PAPER) && comp.equals(ROCK)) {
             System.out.println(comp);
             userWins++;
-            updateUI();
             status.setText("USER WINS!");
         }
         else {
             System.out.println(comp);
             compWins++;
-            updateUI();
             status.setText("COMPUTER WINS!");
         }
-    }
-
-    public void updateUI() {
         score.setText("User: " + userWins + " Computer: " + compWins);
     }
 
     public void display() {
         frame.setVisible(true);
     }
-
-    @Override
-    public void actionPerformed(ActionEvent e) {
-        
-    }
-
 }
